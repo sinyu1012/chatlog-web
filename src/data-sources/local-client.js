@@ -1,9 +1,22 @@
-import { reactive } from 'vue'
+import { reactive, toRaw } from 'vue'
 
 export const localState=reactive({ready:false,archiveId:null,report:null,selfId:'',storage:'opfs',importing:false,progress:null,error:''})
 let worker,sequence=0,importId=null,cancelTimer
 const pending=new Map()
 
+// Vue proxies cannot be structured-cloned. Unwrap nested query arrays while
+// preserving native File/Blob objects instead of serializing file bytes as JSON.
+export function toWorkerData(value,seen=new WeakMap()) {
+  const raw=toRaw(value)
+  if (!raw || typeof raw!=='object') return raw
+  const prototype=Object.getPrototypeOf(raw)
+  if (!Array.isArray(raw) && prototype!==Object.prototype && prototype!==null) return raw
+  if (seen.has(raw)) return seen.get(raw)
+  const result=Array.isArray(raw)?[]:Object.create(null)
+  seen.set(raw,result)
+  for (const [key,item] of Object.entries(raw)) result[key]=toWorkerData(item,seen)
+  return result
+}
 export function stopLocal(reason='本地数据源已关闭。') {
   worker?.terminate();worker=null
   clearTimeout(cancelTimer)
@@ -43,7 +56,7 @@ export function localRequest(method,args={}) {
       const target=ensureWorker(),id=++sequence,request={resolve,reject,method,timer:null}
       pending.set(id,request);arm(request)
       if (method==='import') importId=id
-      try {target.postMessage({id,method,args})} catch (error) {pending.delete(id);clearTimeout(request.timer);reject(error)}
+      try {target.postMessage({id,method,args:toWorkerData(args)})} catch (error) {pending.delete(id);clearTimeout(request.timer);reject(error)}
     } catch (error) {reject(error)}
   })
 }
