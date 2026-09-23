@@ -156,8 +156,7 @@ docs/_build/
 *.swo
 *~
 
-# Package managers
-package-lock.json
+# Package managers (npm lockfile is tracked for repeatable builds)
 yarn.lock
 pnpm-lock.yaml
 
@@ -211,11 +210,17 @@ temp/
 .config/
 
 # Chatlog specific
-# Exclude any local chatlog data or configuration
+# Exclude local chat databases, sidecars and credentials
 data/
 config/local.json
 *.db
+*.db-wal
+*.db-shm
 *.sqlite
+*.sqlite-wal
+*.sqlite-shm
+all_keys.json
+wechat-passphrase.json
 
 # Production build
 /dist/
@@ -238,4 +243,4 @@ public/css/
 .stylelintcache
 
 # Prettier cache
-.prettiercache 
+.prettiercache
