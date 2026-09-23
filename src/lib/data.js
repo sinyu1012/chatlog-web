@@ -54,7 +54,7 @@ export function unwrap(input) {
   return []
 }
 export function parseList(input, kind) {
-  if (typeof input !== 'string' || /^[\s]*[\[{]/.test(input)) return unwrap(input)
+  if (typeof input !== 'string' || /^\s*[[{]/.test(input)) return unwrap(input)
   if (kind !== 'sessions') return parseCSV(input)
   return input.split(/\r?\n/).map(line => {
     const m = line.match(/^(.+)\(([^)]+)\)\s+(\d{4}-\d{2}-\d{2}.*)$/)
@@ -76,7 +76,7 @@ export function normalizeSession(item) {
   return { ...item, id, name: text(item.name || item.displayName || item.nickName || item.NickName || item.nickname || item.talkerName || id || '未命名会话'), lastMessageTime: item.lastMessageTime || item.lastTime || item.time || item.timestamp, preview: text(item.content || item.lastMessage || item.summary), kind: id.includes('@chatroom') || item.isChatRoom ? 'room' : 'contact' }
 }
 export function parseChatLogs(input) {
-  if (typeof input !== 'string' || /^[\s]*[\[{]/.test(input)) return unwrap(input).map(normalizeMessage)
+  if (typeof input !== 'string' || /^\s*[[{]/.test(input)) return unwrap(input).map(normalizeMessage)
   if (/^(sender|发送者|seq|time)[^\n]*,/i.test(input.trim())) return parseCSV(input).map(normalizeMessage)
   const logs = []; let current = null
   for (const line of input.split(/\r?\n/)) {
