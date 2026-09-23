@@ -1,0 +1,3 @@
+# Generated Python caches are not source fixtures.
+__pycache__/
+*.py[cod]

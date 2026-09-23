@@ -19,10 +19,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Prepare asserted review and documentation
-        run: |
-          if test -f scripts/review-local.cjs; then node scripts/review-local.cjs; fi
-          node scripts/update-local-readme.cjs
+          cache: npm
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
       - name: Core and archive unit tests
@@ -43,13 +40,8 @@ jobs:
         run: python tests/browser-smoke.py
       - name: Real SQLite local import regression
         run: python tests/browser-local.py
-      - name: Prepare review artifacts
-        if: always()
-        run: |
-          mkdir -p review
-          git diff --stat > review/changed-files.txt
-          tar --exclude=node_modules --exclude=.git --exclude=review --exclude=dist -czf review/source.tar.gz .
-          if test -d dist; then tar -czf review/dist.tar.gz dist; fi
+      - name: Verify application source was not changed by tests
+        run: git diff --exit-code -- src package.json package-lock.json README.md README_EN.md
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -57,43 +49,4 @@ jobs:
           path: |
             images/ui/
             images/wcdb/
-            review/
           if-no-files-found: warn
-  publish:
-    needs: verify
-    if: github.event_name == 'push' && github.ref == 'refs/heads/feat/local-wcdb-archive'
-    permissions:
-      contents: write
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: feat/local-wcdb-archive
-      - uses: actions/download-artifact@v4
-        with:
-          name: local-archive-evidence
-          path: /tmp/local-evidence
-      - name: Publish only verified source and fictional screenshots
-        env:
-          VERIFIED_SHA: ${{ github.sha }}
-        run: |
-          set -eu
-          test "$(git rev-parse HEAD)" = "$VERIFIED_SHA"
-          mkdir -p /tmp/verified-source
-          tar -xzf /tmp/local-evidence/review/source.tar.gz -C /tmp/verified-source
-          cp -a /tmp/verified-source/src/. src/
-          cp -a /tmp/verified-source/tests/. tests/
-          cp -a /tmp/verified-source/docs/. docs/
-          cp /tmp/verified-source/package.json package.json
-          cp /tmp/verified-source/package-lock.json package-lock.json
-          cp /tmp/verified-source/README.md README.md
-          cp /tmp/verified-source/README_EN.md README_EN.md
-          cp -a /tmp/verified-source/images/. images/
-          if ! test -f /tmp/verified-source/scripts/review-local.cjs; then rm -f scripts/review-local.cjs; fi
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src tests docs package.json package-lock.json README.md README_EN.md images scripts
-          if ! git diff --cached --quiet; then
-            git commit -m 'chore: publish verified archive review and production screenshots'
-            git push origin HEAD:feat/local-wcdb-archive
-          fi
