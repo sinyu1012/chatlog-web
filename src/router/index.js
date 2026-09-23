@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Layout from '@/layout/index.vue'
 const routes = [{ path: '/', component: Layout, redirect: '/dashboard', children: [
+  { path: '/sources', name: 'Sources', component: () => import('@/views/Sources.vue'), meta: { title: '数据来源' } },
   { path: '/dashboard', name: 'Dashboard', component: () => import('@/views/Dashboard.vue'), meta: { title: '总览' } },
   { path: '/analytics', name: 'Analytics', component: () => import('@/views/Analytics.vue'), meta: { title: '数据分析' } },
   { path: '/chatlog', name: 'ChatLog', component: () => import('@/views/ChatLog.vue'), meta: { title: '聊天记录' } },

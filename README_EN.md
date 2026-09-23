@@ -10,6 +10,16 @@ A read-only web interface for [chatlog](https://github.com/sjzar/chatlog). The r
 
 > This project contains no data-cracking code or instructions. You provide the data and backend service. Only access data you are authorized to use. The interface does not send chat messages.
 
+## HTTP and local plaintext archives
+
+Use an existing chatlog HTTP service, or import already-decrypted WeChat 4.x SQLite files in **Data sources**. SQLite WASM runs inside a browser worker; this feature neither invokes key-extraction tools nor uploads chat data. All seven archive views share the selected source.
+
+![Local import report using fictional SQLite fixtures](images/wcdb/sources.png)
+
+Local archives require HTTPS/localhost, OPFS support and storage permission. The browser copy is not additionally encrypted. Unknown schemas, unsupported dictionary compression and missing attachments are explicit states, not empty history. Only synthetic fixtures have been automatically validated; compatibility with every WeChat build and complete history recovery are not claimed.
+
+See [local archive documentation](docs/LOCAL-ARCHIVE.md) for consent, storage, resource limits, media support and tests.
+
 ## Screenshots
 
 These are screenshots of the **running production build**, not design mockups. Names, conversations, chart values, and media are explicitly fictional demo data. Images are stored in this repository under `images/ui/` and reproduced by `tests/browser-smoke.py`.

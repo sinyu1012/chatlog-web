@@ -3,6 +3,12 @@ import { fail, quote, yieldTask } from './common.mjs'
 export function configure(sqlite,db,readonly=false) {
   db.exec('PRAGMA trusted_schema=OFF; PRAGMA temp_store=MEMORY; PRAGMA cache_size=-4096')
   if (readonly) db.exec('PRAGMA query_only=ON')
+  if (sqlite.capi.sqlite3_limit) {
+    sqlite.capi.sqlite3_limit(db.pointer,sqlite.capi.SQLITE_LIMIT_LENGTH,4*1024*1024)
+    sqlite.capi.sqlite3_limit(db.pointer,sqlite.capi.SQLITE_LIMIT_SQL_LENGTH,128*1024)
+    sqlite.capi.sqlite3_limit(db.pointer,sqlite.capi.SQLITE_LIMIT_COLUMN,512)
+    sqlite.capi.sqlite3_limit(db.pointer,sqlite.capi.SQLITE_LIMIT_ATTACHED,0)
+  }
   db.queryDeadline=Infinity
   if (sqlite.capi.sqlite3_progress_handler) sqlite.capi.sqlite3_progress_handler(db.pointer,2000,()=>Date.now()>db.queryDeadline?1:0,0)
 }

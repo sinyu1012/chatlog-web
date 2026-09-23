@@ -3,8 +3,9 @@ import { LIMITS, fail, string } from './common.mjs'
 export function inputPlan(files) {
   const databases=[], ignored=[], seen=new Set(), roots=new Set()
   let bytes=0, ignoredCount=0
-  for (const file of Array.from(files || [])) {
-    const path=string(file.webkitRelativePath || file.name).replace(/\\/g,'/')
+  for (const entry of Array.from(files || [])) {
+    const file=entry.file || entry
+    const path=string(entry.path || file.webkitRelativePath || file.name).replace(/\\/g,'/')
     if (!path || path.split('/').includes('..') || path.includes('\0')) fail('PATH','文件路径无效。')
     if (/-wal$/i.test(path) && file.size) fail('WAL','发现非空 WAL。请先准备已合并 WAL 的一致明文快照，不要混用原始 WAL 与明文数据库。')
     if (!/\.db$/i.test(path)) {

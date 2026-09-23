@@ -1,6 +1,6 @@
 <template>
   <div class="sources-page">
-    <PageHeading eyebrow="YOUR DATA, YOUR CONTROL" title="数据来源" subtitle="连接自己的服务，或把已经准备好的数据库留在本机。"/>
+    <PageHeading eyebrow="YOUR DATA, YOUR CONTROL" title="数据来源" description="连接自己的服务，或把已经准备好的数据库留在本机。"/>
     <div class="source-options">
       <section class="panel source-option" :class="{selected:!isLocal}"><UiIcon name="link" :size="24"/><h2>chatlog HTTP 服务</h2><p>保留原来的连接方式，读取你配置的数据服务。</p><label class="field"><span>服务地址</span><input v-model="endpoint" placeholder="留空使用同源代理"/></label><button class="btn" :disabled="busy || demoEnabled" @click="useHttp">保存并使用 HTTP</button></section>
       <section class="panel source-option" :class="{selected:isLocal}"><UiIcon name="folder" :size="24"/><h2>本地微信 4.x 数据库</h2><p>只读明文 SQLite，不提取密钥、不启动外部工具、不上传聊天数据。</p><p class="source-status">{{ localState.ready ? localState.report?.name : '还没有本地档案' }}</p><button v-if="localState.ready" class="btn" :disabled="busy || demoEnabled" @click="activateLocal">{{ isLocal ? '重新读取本地档案' : '使用本地档案' }}</button><button v-else class="btn" :disabled="busy || demoEnabled" @click="refreshStatus">检查已保存的档案</button></section>

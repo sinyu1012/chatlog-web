@@ -57,6 +57,9 @@ export async function importArchive(storage,options,notify,check) {
     phase='整理会话与覆盖报告'; tick()
     exec(index,"UPDATE sessions SET name=COALESCE((SELECT name FROM contacts WHERE contacts.id=sessions.id),name)")
     exec(index,"UPDATE sessions SET lastMs=COALESCE((SELECT MAX(timeMs) FROM messages WHERE talkerId=sessions.id),lastMs),preview=COALESCE((SELECT content FROM messages WHERE talkerId=sessions.id ORDER BY timeMs DESC,sortSeq DESC,id DESC LIMIT 1),'')")
+    const extent=rows(index,'SELECT MIN(timeMs) first,MAX(timeMs) last FROM messages')[0]
+    report.firstMessageAt=extent.first?new Date(extent.first).toISOString():null
+    report.lastMessageAt=extent.last?new Date(extent.last).toISOString():null
     report.contacts=rows(index,"SELECT COUNT(*) n FROM contacts WHERE id NOT LIKE '%@chatroom'")[0].n
     report.sessions=rows(index,'SELECT COUNT(*) n FROM sessions')[0].n
     report.partial=!!(report.unparsed || report.skippedTables.length || report.unmappedTables || report.files.some(file=>file.state==='error' || file.state==='unsupported'))

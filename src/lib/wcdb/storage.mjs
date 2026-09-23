@@ -38,7 +38,7 @@ export async function createStorage(sqlite) {
       exec(catalog,"INSERT OR REPLACE INTO catalog VALUES ('active',?)",[path])
       const previous=active
       current?.close(); current=db; active=path
-      if (previous && previous!==path) pool.unlink(previous)
+      if (previous && previous!==path) {try {pool.unlink(previous)} catch (_) { /* Published archive is valid; old orphan is cleaned on next open. */ }}
       return status()
     },
     clear() {

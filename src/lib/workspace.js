@@ -1,5 +1,6 @@
 import { reactive, readonly } from 'vue'
 import api from '@/api'
+import { isLocal } from '@/data-sources/source'
 import { rangeDays, toDate } from './data'
 import { clock } from './demo'
 const state=reactive({contacts:[],chatrooms:[],sessions:[],ready:false,loading:false,errors:{},updatedAt:null,revision:0,toast:''})
@@ -28,6 +29,7 @@ export async function loadSample(days=30,force=false){
   const epoch=generation
   if(state.errors.sessions)throw new Error(state.errors.sessions)
   if(!force && sampleCache.has(days))return sampleCache.get(days)
+  if(isLocal.value){const result=await api.getLocalAnalysis({days});if(epoch!==generation)throw new Error('数据来源已变更。');sampleCache.set(days,result);return result}
   const sessions=state.sessions.slice(0,10), logs=[], failures=[],capped=[]
   // Bound concurrency to avoid flooding a local chatlog server.
   for(let start=0;start<sessions.length;start+=3){
