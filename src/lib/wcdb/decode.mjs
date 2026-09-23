@@ -27,6 +27,7 @@ export function decodeColumn(value, marker) {
     }
     return { text:new TextDecoder('utf-8',{fatal:true}).decode(bytes).replace(/\0+$/,''), status:'ok' }
   } catch (error) {
-    return { text:'', status:error.code || 'DECODE_FAILED', reason:error.code ? error.message : '正文编码或压缩数据无效' }
+    const known=['COMPRESSION_UNKNOWN','DICTIONARY_REQUIRED','CONTENT_TYPE','CONTENT_LIMIT','ZSTD_FORMAT'].includes(error.code)
+    return { text:'', status:known ? error.code : 'DECODE_FAILED', reason:known ? error.message : '正文编码或压缩数据无效' }
   }
 }
