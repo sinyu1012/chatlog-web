@@ -46,7 +46,7 @@ This adapter reads data that the user has already prepared. It does not depend o
 - `src/lib/wcdb/`: schema probing, source parsing, column decompression, index, queries and statistics.
 - `src/views/Sources.vue`, `LocalMedia.vue`, `components/LocalAttachment.vue`: import and local media UI.
 
-Run `node --test tests/core.test.mjs tests/wcdb.test.mjs`, `npm run lint -- --no-fix src`, `npm run build`, `python tests/browser-smoke.py`, and `python tests/browser-local.py`. Python browser tests require Playwright Chromium and Pillow. `tests/make-local-fixtures.py` only generates fictional databases. Screenshots in `images/wcdb/` come from production builds with those fixtures; see the generated manifest for the checks actually completed.
+Run `node --test tests/*.test.mjs`, `npm run lint -- --no-fix src`, `npm run build`, `python tests/browser-smoke.py`, and `python tests/browser-local.py`. Python browser tests require Playwright Chromium and Pillow. `tests/make-local-fixtures.py` only generates fictional databases. Screenshots in `images/wcdb/` come from production builds with those fixtures; see the generated manifest for the checks actually completed.
 
 ## Primary references
 

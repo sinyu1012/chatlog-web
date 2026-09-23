@@ -63,7 +63,7 @@ def build(root: Path):
     draw.rounded_rectangle((60,40,420,240),radius=25,fill='#547763')
     draw.text((150,125),'FICTIONAL FIXTURE',fill='white')
     image.save(root / '0123456789abcdef0123456789abcdef.png')
-    (root / 'manifest.json').write_text(json.dumps({'fictional':True,'messages':count,'shards':2,'unparsed':8},indent=2))
+    (root / 'manifest.json').write_text(json.dumps({'fictional':True,'messages':count,'shards':2,'unparsed':4},indent=2))
     return {'messages':count,'files':[str(path) for path in sorted(root.glob('*.db'))]}
 
 if __name__ == '__main__':

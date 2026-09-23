@@ -143,10 +143,22 @@ try:
       assert rpc(page,'status')['archiveId']==archive and rpc(page,'chatlog',{'keyword':'春风'})['total']==2
       checked('HTTP/local switching clears view caches without deleting the local archive')
       page.set_viewport_size({'width':390,'height':844})
+      page.wait_for_function("document.querySelector('.sidebar').getBoundingClientRect().right<=1")
       page.screenshot(path=str(OUT/'mobile-sources.png'),full_page=True)
       assert page.locator('body').evaluate('(el)=>el.scrollWidth<=window.innerWidth+1')
       checked('390px mobile source manager has no horizontal overflow')
+      for route in ['dashboard','chatlog','analytics','contacts','chatrooms','sessions','media']:
+        page.goto('http://127.0.0.1:8780/'+route);page.wait_for_timeout(1000)
+        assert page.locator('body').evaluate('(el)=>el.scrollWidth<=window.innerWidth+1'),route
+        assert not page.locator('.state-panel.error').count(),page.locator('body').inner_text()
+        checked('local source mobile route: '+route)
+      page.goto('http://127.0.0.1:8780/sources')
+      expect(page.locator('.source-metrics strong').first).to_have_text('60')
       page.set_viewport_size({'width':1440,'height':1050})
+      page.locator('.topbar').get_by_role('button',name='切换深色模式',exact=True).click()
+      expect(page.locator('html')).to_have_attribute('data-theme','dark')
+      page.screenshot(path=str(OUT/'sources-dark.png'),full_page=True)
+      checked('local source manager dark theme')
       page.locator('.source-danger input').check()
       page.get_by_role('button',name='清除本地档案',exact=True).click()
       expect(page.locator('.source-report')).to_have_count(0,timeout=30000)

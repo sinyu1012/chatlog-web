@@ -1,7 +1,7 @@
 {
   "fictional": true,
   "renderer": "production dist + actual SQLite WASM + OPFS",
-  "sourceCommit": "509efbfc1b4bb589417f1612a16b3659a0478ea5",
+  "sourceCommit": "776fe565ca03e7cd1d41c81fb5cf6ef5c5cc50ae",
   "checks": [
     "real SQLite import: two message shards, contacts, sessions, compression report",
     "historical archive extent is recorded",
@@ -29,6 +29,14 @@
     "nonempty WAL blocks import without replacing existing data",
     "HTTP/local switching clears view caches without deleting the local archive",
     "390px mobile source manager has no horizontal overflow",
+    "local source mobile route: dashboard",
+    "local source mobile route: chatlog",
+    "local source mobile route: analytics",
+    "local source mobile route: contacts",
+    "local source mobile route: chatrooms",
+    "local source mobile route: sessions",
+    "local source mobile route: media",
+    "local source manager dark theme",
     "explicit clear removes the local index and associated attachments",
     "no uncaught browser exceptions"
   ],

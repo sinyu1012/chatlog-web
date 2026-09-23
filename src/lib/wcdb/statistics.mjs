@@ -29,5 +29,5 @@ export async function statistics(db,options={},check=()=>{}) {
     if (row.kind==='text' && row.decodeStatus==='ok') words.add(row.content)
   },check)
   const stats={logs:[],total,users:people.size,average:Math.round(total/days),activeDays:daily.filter(d=>d.value).length,daily,hourly,heat,unparsed,types:Object.keys(types).map(type=>({type,label:KIND_LABELS[type],value:types[type]})),groups:[...groups.values()].sort((a,b)=>b.value-a.value).slice(0,10),...words.finish()}
-  return {local:true,days,end:anchor.toISOString(),sessions:report.sessions,totalSessions:report.sessions,failures:[],capped:[],logs:[],report,stats}
+  return {local:true,days,end:anchor.toISOString(),endDate:dayKey(anchor),sessions:report.sessions,totalSessions:report.sessions,failures:[],capped:[],logs:[],report,stats}
 }
