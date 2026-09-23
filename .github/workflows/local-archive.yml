@@ -19,12 +19,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Prepare asserted integration and documentation
+      - name: Prepare asserted review and documentation
         run: |
-          if test -f scripts/integrate-wcdb.cjs; then node scripts/integrate-wcdb.cjs; fi
+          if test -f scripts/review-local.cjs; then node scripts/review-local.cjs; fi
           node scripts/update-local-readme.cjs
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
       - name: Core and archive unit tests
         run: node --test tests/*.test.mjs
       - name: Lint source
@@ -39,8 +39,6 @@ jobs:
           python -m pip install playwright==1.52.0 pillow
           python -m playwright install --with-deps chromium
           sudo apt-get install -y fonts-noto-cjk
-      - name: Local import diagnostic
-        run: python tests/local-diagnostic.py
       - name: Existing HTTP and demo regression
         run: python tests/browser-smoke.py
       - name: Real SQLite local import regression
@@ -84,17 +82,18 @@ jobs:
           mkdir -p /tmp/verified-source
           tar -xzf /tmp/local-evidence/review/source.tar.gz -C /tmp/verified-source
           cp -a /tmp/verified-source/src/. src/
+          cp -a /tmp/verified-source/tests/. tests/
+          cp -a /tmp/verified-source/docs/. docs/
           cp /tmp/verified-source/package.json package.json
           cp /tmp/verified-source/package-lock.json package-lock.json
-          cp /tmp/verified-source/vue.config.js vue.config.js
           cp /tmp/verified-source/README.md README.md
           cp /tmp/verified-source/README_EN.md README_EN.md
           cp -a /tmp/verified-source/images/. images/
-          if ! test -f /tmp/verified-source/scripts/integrate-wcdb.cjs; then rm -f scripts/integrate-wcdb.cjs; fi
+          if ! test -f /tmp/verified-source/scripts/review-local.cjs; then rm -f scripts/review-local.cjs; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src package.json package-lock.json vue.config.js README.md README_EN.md images scripts
+          git add src tests docs package.json package-lock.json README.md README_EN.md images scripts
           if ! git diff --cached --quiet; then
-            git commit -m 'chore: publish verified local archive integration and browser screenshots'
+            git commit -m 'chore: publish verified archive review and production screenshots'
             git push origin HEAD:feat/local-wcdb-archive
           fi
