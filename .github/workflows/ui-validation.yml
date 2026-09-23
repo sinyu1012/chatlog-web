@@ -1,0 +1,75 @@
+name: UI validation
+on:
+  push:
+    branches: [main, design/chatlog-workspace-ui]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ui-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Core tests
+        run: node --test tests/core.test.mjs
+      - name: Lint application without edits
+        run: npm run lint -- --no-fix src
+      - name: Production build
+        run: npm run build
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install browser tooling
+        run: |
+          python -m pip install playwright==1.52.0
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Browser checks and README screenshots
+        run: python tests/browser-smoke.py
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-evidence
+          path: images/ui/
+          if-no-files-found: ignore
+  publish-screenshots:
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/design/chatlog-workspace-ui'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: design/chatlog-workspace-ui
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: ui-evidence
+          path: images/ui
+      - name: Commit only verified fictional screenshots to the feature branch
+        env:
+          VERIFIED_SHA: ${{ github.sha }}
+        run: |
+          set -eu
+          test "$(git rev-parse HEAD)" = "$VERIFIED_SHA"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add images/ui
+          if ! git diff --cached --quiet; then
+            git commit -m 'docs: refresh README screenshots from verified production UI'
+            git push origin HEAD:design/chatlog-workspace-ui
+          fi

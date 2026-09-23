@@ -1,0 +1,2 @@
+<template><svg viewBox="0 0 40 40" width="36" height="36" fill="none" aria-hidden="true"><rect width="40" height="40" rx="12" fill="currentColor"/><path d="M11 10h16a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3h-9l-7 5V10Z" fill="white" fill-opacity=".95"/><path d="M16 15h9M16 20h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></template>
+<script>export default {name:'BrandMark'}</script>
