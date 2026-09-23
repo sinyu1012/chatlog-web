@@ -39,6 +39,8 @@ jobs:
           python -m pip install playwright==1.52.0 pillow
           python -m playwright install --with-deps chromium
           sudo apt-get install -y fonts-noto-cjk
+      - name: Local import diagnostic
+        run: python tests/local-diagnostic.py
       - name: Existing HTTP and demo regression
         run: python tests/browser-smoke.py
       - name: Real SQLite local import regression
@@ -49,6 +51,7 @@ jobs:
           mkdir -p review
           git diff --stat > review/changed-files.txt
           tar --exclude=node_modules --exclude=.git --exclude=review --exclude=dist -czf review/source.tar.gz .
+          if test -d dist; then tar -czf review/dist.tar.gz dist; fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
