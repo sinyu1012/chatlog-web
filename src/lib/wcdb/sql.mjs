@@ -18,7 +18,9 @@ export async function each(db,sql,bind,callback,check=()=>{}) {
   db.queryDeadline=Date.now()+15000
   const statement=db.prepare(sql)
   try {
-    statement.bind(bind); let count=0
+    // OO1 bind([]) still throws when a statement has no bindable parameters.
+    if (statement.parameterCount) statement.bind(bind)
+    let count=0
     while (true) {
       db.queryDeadline=Date.now()+15000
       if (!statement.step()) break
