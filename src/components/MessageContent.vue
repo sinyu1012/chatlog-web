@@ -1,10 +1,15 @@
-<template><div class="message-rich"><template v-for="(part,i) in parts" :key="i"><span v-if="part.type==='text'" style="white-space:pre-wrap"><template v-for="(piece,j) in highlighted(part.value)" :key="j"><mark v-if="piece.match">{{ piece.value }}</mark><template v-else>{{ piece.value }}</template></template></span><div v-else-if="isDemoMissing(part)" class="asset-consent"><UiIcon :name="part.type"/><div>{{ part.name }}<small>演示附件 · 仅展示样式，不提供真实文件</small></div></div><div v-else-if="isRemote(part)&&!allowed[part.url]" class="asset-consent"><UiIcon :name="part.type"/><div><span>外部{{ labels[part.type] }}</span><small>加载会请求资源所在服务器</small><button class="text-button" @click="allowed[part.url]=true">允许加载一次</button></div></div><template v-else><button v-if="part.type==='image'&&!failed[part.url]" class="inline-preview-button" aria-label="预览消息图片" @click="preview=source(part);visible=true"><img :src="source(part)" alt="聊天图片" loading="lazy" referrerpolicy="no-referrer" @error="failed[part.url]=true"/></button><span v-else-if="part.type==='image'" class="clear-message">图片加载失败，可检查数据服务后重试。</span><video v-else-if="part.type==='video'" class="media-inline" :src="source(part)" controls preload="none"/><audio v-else-if="part.type==='voice'" class="media-inline" :src="source(part)" controls preload="none"/><a v-else-if="part.type==='file'" class="file-link" :href="part.url" target="_blank" rel="noopener noreferrer"><UiIcon name="file"/>{{ part.name }}<UiIcon name="arrow" :size="14"/></a></template></template><UiDialog v-model="visible" title="图片预览"><img v-if="visible" :src="preview" class="preview-image" alt="聊天图片预览" referrerpolicy="no-referrer"/></UiDialog></div></template>
+<template>
+  <div v-if="message?.source==='local-wcdb'" class="message-rich">
+    <span style="white-space:pre-wrap"><template v-for="(piece,index) in pieces" :key="index"><mark v-if="piece.match">{{ piece.value }}</mark><template v-else>{{ piece.value }}</template></template></span>
+    <LocalAttachment v-for="attachment in message.attachments || []" :key="attachment.id" :attachment="attachment"/>
+    <small v-if="message.decodeStatus!=='ok'" class="muted">该记录已保留；正文暂不参与关键词搜索。</small>
+  </div>
+  <HttpMessageContent v-else :content="content" :keywords="keywords"/>
+</template>
 <script>
-import { ref, computed } from 'vue'
-import { mediaParts, highlightParts, typeLabels } from '@/lib/data'
-import { resolvedApiBase } from '@/api'
-import { demoEnabled, assetUrl } from '@/lib/demo'
-import UiIcon from './ui/UiIcon.vue'
-import UiDialog from './ui/UiDialog.vue'
-export default {name:'MessageContent',components:{UiIcon,UiDialog},props:{content:String,keywords:{type:Array,default:()=>[]}},setup(props){const allowed=ref({}),failed=ref({}),visible=ref(false),preview=ref('');const parts=computed(()=>mediaParts(props.content,resolvedApiBase()));const source=part=>demoEnabled&&new URL(part.url).pathname.startsWith('/brand/')?assetUrl(part.name):part.url;const isDemoMissing=part=>demoEnabled&&new URL(part.url).pathname.startsWith('/demo/');const isRemote=part=>{if(demoEnabled&&new URL(part.url).pathname.startsWith('/brand/'))return false;return new URL(part.url).origin!==new URL(resolvedApiBase()).origin};return {parts,allowed,failed,visible,preview,source,isRemote,isDemoMissing,labels:typeLabels,highlighted:value=>highlightParts(value,props.keywords)}}}
+import { computed } from 'vue'
+import { highlightParts } from '@/lib/data'
+import HttpMessageContent from './HttpMessageContent.vue'
+import LocalAttachment from './LocalAttachment.vue'
+export default {name:'MessageContent',components:{HttpMessageContent,LocalAttachment},props:{message:Object,content:String,keywords:{type:Array,default:()=>[]}},setup(props){return {pieces:computed(()=>highlightParts(props.content || '',props.keywords))}}}
 </script>

@@ -1,0 +1,97 @@
+name: Local archive validation
+on:
+  push:
+    branches: [main, feat/local-wcdb-archive]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: local-archive-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare asserted integration and documentation
+        run: |
+          if test -f scripts/integrate-wcdb.cjs; then node scripts/integrate-wcdb.cjs; fi
+          node scripts/update-local-readme.cjs
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Core and archive unit tests
+        run: node --test tests/core.test.mjs tests/wcdb.test.mjs
+      - name: Lint source
+        run: npm run lint -- --no-fix src
+      - name: Build production app
+        run: npm run build
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install browser tooling
+        run: |
+          python -m pip install playwright==1.52.0 pillow
+          python -m playwright install --with-deps chromium
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Existing HTTP and demo regression
+        run: python tests/browser-smoke.py
+      - name: Real SQLite local import regression
+        run: python tests/browser-local.py
+      - name: Prepare review artifacts
+        if: always()
+        run: |
+          mkdir -p review
+          git diff --stat > review/changed-files.txt
+          tar --exclude=node_modules --exclude=.git --exclude=review --exclude=dist -czf review/source.tar.gz .
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: local-archive-evidence
+          path: |
+            images/ui/
+            images/wcdb/
+            review/
+          if-no-files-found: warn
+  publish:
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/feat/local-wcdb-archive'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/local-wcdb-archive
+      - uses: actions/download-artifact@v4
+        with:
+          name: local-archive-evidence
+          path: /tmp/local-evidence
+      - name: Publish only verified source and fictional screenshots
+        env:
+          VERIFIED_SHA: ${{ github.sha }}
+        run: |
+          set -eu
+          test "$(git rev-parse HEAD)" = "$VERIFIED_SHA"
+          mkdir -p /tmp/verified-source
+          tar -xzf /tmp/local-evidence/review/source.tar.gz -C /tmp/verified-source
+          cp -a /tmp/verified-source/src/. src/
+          cp /tmp/verified-source/package.json package.json
+          cp /tmp/verified-source/package-lock.json package-lock.json
+          cp /tmp/verified-source/vue.config.js vue.config.js
+          cp /tmp/verified-source/README.md README.md
+          cp /tmp/verified-source/README_EN.md README_EN.md
+          cp -a /tmp/verified-source/images/. images/
+          if ! test -f /tmp/verified-source/scripts/integrate-wcdb.cjs; then rm -f scripts/integrate-wcdb.cjs; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src package.json package-lock.json vue.config.js README.md README_EN.md images scripts
+          if ! git diff --cached --quiet; then
+            git commit -m 'chore: publish verified local archive integration and browser screenshots'
+            git push origin HEAD:feat/local-wcdb-archive
+          fi
